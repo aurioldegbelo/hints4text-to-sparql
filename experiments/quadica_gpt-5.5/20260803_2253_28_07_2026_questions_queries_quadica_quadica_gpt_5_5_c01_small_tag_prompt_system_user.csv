@@ -1,0 +1,1126 @@
+question,generated_sparql,actual_sparql,model_name,experiment_name,schema_mode,schema_label,question_id,run_timestamp,execution_time_sec,is_valid_final,sim_content,sim_struct_string_similarity,sim_struct_graph_similarity,sim_struct_semantic_similarity,sim_struct_combined_similarity,sim_lang_frequency_similarity,sim_lang_boolean_similarity,val_grammar_ok,val_grammar_error,val_preparation_ok,val_preparation_error,metric_query_type,metric_error,metric_exact_count,metric_jaccard,metric_exact_match,metric_precision,metric_recall,metric_f1,metric_answer_overlap_jaccard,metric_answer_overlap_precision,metric_answer_overlap_recall,metric_answer_overlap_f1,metric_answer_overlap_basis,metric_llm_equivalence_decision,metric_llm_equivalence_reason
+Where is gauging station “SN_OBF01800_m” located?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?station ?location
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?station a sosa:Sensor ;
+             geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?location .
+    {
+      ?station schema:name ?name .
+      FILTER(STR(?name) = ""SN_OBF01800_m"")
+    }
+    UNION
+    {
+      ?station dct:identifier ?identifier .
+      FILTER(STR(?identifier) = ""SN_OBF01800_m"")
+    }
+  }
+}","PREFIX geo:    <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+
+SELECT ?name ?wkt ?lon ?lat
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor a sosa:Sensor ;
+            schema:name ?name ;
+            geo:hasGeometry ?geom .
+
+    FILTER(str(?name) = ""SN_OBF01800_m"")
+
+    ?geom geo:asWKT ?wkt .
+
+    BIND(bif:st_x(?wkt) AS ?lon)
+    BIND(bif:st_y(?wkt) AS ?lat)
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,0,2026-08-03T22:40:28.434517,10.334991455078125,True,0.1111111111111111,0.4810126582278481,0.9359964818286183,0.8146309852600098,0.8753137588500977,0.5714285714285714,0.75,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.2,0.5,0.25,0.3333333333333333,all_values,No,"Although both bindings provide the same geometry (POINT(13.404045222124 51.209331620628)), the gold result identifies the station explicitly as the literal ""SN_OBF01800_m"", while the generated result uses a different identifier (the URI https://w3id.org/hmontology/sensor_1030). Without an explicit mapping linking that URI to the gauging station SN_OBF01800_m, the two bindings do not convey the same answer to the question ""Where is gauging station ‘SN_OBF01800_m’ located?"""
+What are the gauging station locations of the five largest catchments by area?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?station ?stationName ?catchment ?areaKm2 ?locationWKT
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?station a sosa:Sensor ;
+      hyobs:monitorsCatchment ?catchment ;
+      geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?locationWKT .
+    ?catchment hyobs:hasCatchmentAreaKm2 ?areaKm2 .
+    OPTIONAL { ?station schema:name ?stationName . }
+  }
+}
+ORDER BY DESC(xsd:decimal(?areaKm2))
+LIMIT 5","PREFIX hyobs:  <https://w3id.org/hmontology/>
+PREFIX geo:    <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?sensor ?stationName ?catchment ?area ?wkt ?lon ?lat
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor a sosa:Sensor ;
+            geo:hasGeometry ?geom;
+            hyobs:monitorsCatchment ?catchment .
+    OPTIONAL { ?sensor schema:name ?stationName }
+
+    ?catchment hyobs:hasCatchmentArea ?areaNode .
+
+    ?areaNode qudt:numericValue ?area .
+
+    ?geom geo:asWKT ?wkt .
+    BIND(bif:st_x(?wkt) AS ?lon)
+    BIND(bif:st_y(?wkt) AS ?lat)
+  }
+}
+ORDER BY DESC(xsd:decimal(?area))
+LIMIT 5",gpt-5.5,c01,small,Only_ClassesProperties,1,2026-08-03T22:40:42.349693,10.747395992279053,True,0.5333333333333333,0.5818181818181818,0.9981372817825909,0.8505077362060547,0.9243224859237671,0.7453559924999299,0.9128709291752769,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:stationName,catchment",No,"The generated bindings do not match the gold bindings. The station URIs, station names, catchment URIs, and area values differ (the gold set provides specific decimal area values, while the generated set uses blank nodes for area). Additionally, the geometry literals (WKT) are different, and the variable names and structures are not aligned. Therefore, the two result sets are not equivalent."
+What is the boundary of the catchment monitored by sensor 101?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?boundary
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor dct:identifier ?sensorId ;
+            hyobs:monitorsCatchment ?catchment .
+    FILTER(STR(?sensorId) = ""101"")
+    ?catchment geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?boundary .
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX dct:  <http://purl.org/dc/terms/>
+
+SELECT ?catchment ?wkt1
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor a sosa:Sensor ;
+            dct:identifier ?sensorId ;
+            hyobs:monitorsCatchment ?catchment .
+    FILTER(str(?sensorId) = ""101"")
+
+    ?catchment geo:hasGeometry ?g1 .
+    ?g1 geo:asWKT ?wkt1 .         
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,2,2026-08-03T22:40:56.679427,9.129589796066284,True,0.3333333333333333,0.8762376237623762,0.9943050756534283,0.9316706657409668,0.9629878997802734,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.5,1.0,0.5,0.6666666666666666,all_values,No,"The gold result contains two variables (catchment and wkt1) with a URI for the catchment and a geometry literal, while the generated result only provides a single variable (boundary) with the geometry literal. The missing catchment binding and the different variable name mean the result sets are not equivalent, even though the geometry values themselves match."
+Which catchments share a boundary with the catchment that recorded the highest annual median NO₃-N in 1999?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?catchment ?catchmentName
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?targetCatchment (AVG(?middleValue) AS ?annualMedian)
+      WHERE {
+        {
+          SELECT ?targetCatchment ?middleValue
+                 (COUNT(DISTINCT ?allObs) AS ?totalCount)
+                 (COUNT(DISTINCT ?lessObs) AS ?lessCount)
+                 (COUNT(DISTINCT ?greaterObs) AS ?greaterCount)
+          WHERE {
+            ?middleObs a sosa:Observation ;
+              sosa:hasFeatureOfInterest ?targetCatchment ;
+              (hyobs:hasAnalyte|sosa:observedProperty) ?middleAnalyte ;
+              sosa:resultTime ?middleTime ;
+              sosa:hasResult ?middleResult .
+            ?middleResult qudt:numericValue ?middleRaw .
+            OPTIONAL { ?middleAnalyte schema:name ?middleAnalyteName . }
+            BIND(CONCAT(STR(?middleAnalyte), "" "", COALESCE(STR(?middleAnalyteName), """")) AS ?middleAnalyteText)
+            BIND(xsd:double(?middleRaw) AS ?middleValue)
+            FILTER(STRSTARTS(STR(?middleTime), ""1999""))
+            FILTER(REGEX(?middleAnalyteText, ""NO[₃3].?N"", ""i""))
+
+            ?allObs a sosa:Observation ;
+              sosa:hasFeatureOfInterest ?targetCatchment ;
+              (hyobs:hasAnalyte|sosa:observedProperty) ?allAnalyte ;
+              sosa:resultTime ?allTime ;
+              sosa:hasResult ?allResult .
+            ?allResult qudt:numericValue ?allRaw .
+            OPTIONAL { ?allAnalyte schema:name ?allAnalyteName . }
+            BIND(CONCAT(STR(?allAnalyte), "" "", COALESCE(STR(?allAnalyteName), """")) AS ?allAnalyteText)
+            FILTER(STRSTARTS(STR(?allTime), ""1999""))
+            FILTER(REGEX(?allAnalyteText, ""NO[₃3].?N"", ""i""))
+
+            OPTIONAL {
+              ?lessObs a sosa:Observation ;
+                sosa:hasFeatureOfInterest ?targetCatchment ;
+                (hyobs:hasAnalyte|sosa:observedProperty) ?lessAnalyte ;
+                sosa:resultTime ?lessTime ;
+                sosa:hasResult ?lessResult .
+              ?lessResult qudt:numericValue ?lessRaw .
+              OPTIONAL { ?lessAnalyte schema:name ?lessAnalyteName . }
+              BIND(CONCAT(STR(?lessAnalyte), "" "", COALESCE(STR(?lessAnalyteName), """")) AS ?lessAnalyteText)
+              BIND(xsd:double(?lessRaw) AS ?lessValue)
+              FILTER(STRSTARTS(STR(?lessTime), ""1999""))
+              FILTER(REGEX(?lessAnalyteText, ""NO[₃3].?N"", ""i""))
+              FILTER(?lessValue < ?middleValue)
+            }
+
+            OPTIONAL {
+              ?greaterObs a sosa:Observation ;
+                sosa:hasFeatureOfInterest ?targetCatchment ;
+                (hyobs:hasAnalyte|sosa:observedProperty) ?greaterAnalyte ;
+                sosa:resultTime ?greaterTime ;
+                sosa:hasResult ?greaterResult .
+              ?greaterResult qudt:numericValue ?greaterRaw .
+              OPTIONAL { ?greaterAnalyte schema:name ?greaterAnalyteName . }
+              BIND(CONCAT(STR(?greaterAnalyte), "" "", COALESCE(STR(?greaterAnalyteName), """")) AS ?greaterAnalyteText)
+              BIND(xsd:double(?greaterRaw) AS ?greaterValue)
+              FILTER(STRSTARTS(STR(?greaterTime), ""1999""))
+              FILTER(REGEX(?greaterAnalyteText, ""NO[₃3].?N"", ""i""))
+              FILTER(?greaterValue > ?middleValue)
+            }
+          }
+          GROUP BY ?targetCatchment ?middleValue
+        }
+        FILTER(?lessCount <= (?totalCount / 2) && ?greaterCount <= (?totalCount / 2))
+      }
+      GROUP BY ?targetCatchment
+      ORDER BY DESC(?annualMedian)
+      LIMIT 1
+    }
+
+    ?targetCatchment geo:hasGeometry/geo:asWKT ?targetWKT .
+
+    ?catchment a envthes:30212 ;
+      geo:hasGeometry/geo:asWKT ?catchmentWKT .
+    OPTIONAL { ?catchment schema:name ?catchmentName . }
+
+    FILTER(?catchment != ?targetCatchment)
+    FILTER(<http://www.opengis.net/def/function/geosparql/sfTouches>(?catchmentWKT, ?targetWKT))
+  }
+}","PREFIX hyobs:  <https://w3id.org/hmontology/>
+PREFIX geo:    <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX chebi:  <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?topCatchment ?topMedian ?neighborCatchment
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?topCatchment (MAX(xsd:decimal(?val)) AS ?topMedian)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty hyobs:NO3NConcentrationMedian ;
+            hyobs:hasAnalyte chebi:17632 ;
+            sosa:hasFeatureOfInterest ?topCatchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        FILTER(YEAR(?t) = 1999)
+      }
+      GROUP BY ?topCatchment
+      ORDER BY DESC(?topMedian)
+      LIMIT 1
+    }
+
+    ?topCatchment geo:hasGeometry ?g1 .
+    ?g1 geo:asWKT ?wkt1 .
+
+    ?neighborCatchment a envthes:30212.
+    ?neighborCatchment geo:hasGeometry ?g2 .
+    ?g2 geo:asWKT ?neighborWkt .
+
+    FILTER(?neighborCatchment != ?topCatchment)
+    FILTER(bif:st_intersects(?wkt1, ?neighborWkt, 0))
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,3,2026-08-03T22:41:11.585892,96.79952144622803,True,0.059523809523809514,0.29933333333333334,0.9511586766527271,0.758948564529419,0.8550536632537842,0.7013098674613824,0.8164965809277261,True,,True,,error,generated_query_failed: HTTP_ERROR: 500 Server Error: SPARQL Request Failed for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,
+What is the area of the largest catchment in the dataset?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?area
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment hyobs:hasCatchmentAreaKm2 ?area .
+  }
+}
+ORDER BY DESC(xsd:decimal(?area))
+LIMIT 1","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?area
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment a envthes:30212.
+    ?catchment hyobs:hasCatchmentArea ?areaNode .
+    ?areaNode qudt:numericValue ?area .
+  }
+}
+ORDER BY DESC(xsd:decimal(?area))
+LIMIT 1",gpt-5.5,c01,small,Only_ClassesProperties,4,2026-08-03T22:42:51.828620,8.448755502700806,True,0.3333333333333333,0.6629213483146068,0.9478946531678895,0.8959150910377502,0.9219048619270325,1.0,1.0,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:area,No,"The gold binding returns a concrete decimal literal (123012.14) for the variable `area` together with the corresponding `catchment` URI, matching the expected answer to the question. The generated binding provides only a single variable `area` whose value is a blank node identifier, not a numeric literal, and it omits the `catchment` variable entirely. Therefore the two result sets are not equivalent."
+What are the areas of all catchments in the dataset?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?catchment ?name ?areaKm2
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment rdf:type envthes:30212 ;
+               hyobs:hasCatchmentAreaKm2 ?areaKm2 .
+    OPTIONAL { ?catchment schema:name ?name . }
+  }
+}
+ORDER BY ?catchment","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?area
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment a envthes:30212.
+    ?catchment hyobs:hasCatchmentAreaKm2 ?areaNode .
+    ?areaNode qudt:numericValue ?area .
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,5,2026-08-03T22:43:02.970112,6.413317441940308,True,0.16666666666666666,0.6390532544378698,0.9452234092780888,0.8405881524085999,0.8929057717323303,0.7071067811865475,0.7071067811865475,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,shared_variables:catchment,No,"LLM judge failed: Error code: 400 - {'error': {'message': 'litellm.BadRequestError: Hosted_vllmException - {""error"":{""message"":""Input length (208140) exceeds model\'s maximum context length (131072)."",""type"":""BadRequestError"",""param"":null,""code"":400}}', 'type': 'None', 'param': 'None', 'code': '400'}}"
+What is the distance between the stations with the highest and lowest annual median dissolved organic carbon in 2010?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+
+SELECT ?distance
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?stationHigh ?wktHigh ?valueHigh
+      WHERE {
+        ?obsHigh a sosa:Observation ;
+          hyobs:hasAnalyte envthes:30212 ;
+          sosa:resultTime ?timeHigh ;
+          sosa:madeBySensor ?stationHigh ;
+          sosa:hasResult ?resultHigh .
+        ?resultHigh qudt:numericValue ?valueHigh .
+        ?stationHigh geo:hasGeometry ?geometryHigh .
+        ?geometryHigh geo:asWKT ?wktHigh .
+        FILTER(STRSTARTS(STR(?timeHigh), ""2010""))
+      }
+      ORDER BY DESC(xsd:double(?valueHigh))
+      LIMIT 1
+    }
+    {
+      SELECT ?stationLow ?wktLow ?valueLow
+      WHERE {
+        ?obsLow a sosa:Observation ;
+          hyobs:hasAnalyte envthes:30212 ;
+          sosa:resultTime ?timeLow ;
+          sosa:madeBySensor ?stationLow ;
+          sosa:hasResult ?resultLow .
+        ?resultLow qudt:numericValue ?valueLow .
+        ?stationLow geo:hasGeometry ?geometryLow .
+        ?geometryLow geo:asWKT ?wktLow .
+        FILTER(STRSTARTS(STR(?timeLow), ""2010""))
+      }
+      ORDER BY ASC(xsd:double(?valueLow))
+      LIMIT 1
+    }
+    BIND(geof:distance(?wktHigh, ?wktLow, unit:M) AS ?distance)
+  }
+}","PREFIX hyobs:  <https://w3id.org/hmontology/>
+ PREFIX geo:    <http://www.opengis.net/ont/geosparql#>
+ PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+ PREFIX qudt:   <http://qudt.org/schema/qudt/>
+ PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+
+ SELECT ?highestSensor ?highestVal ?lowestSensor ?lowestVal ?distance
+ WHERE {
+   GRAPH <hydroturtle/quadica> {
+     {
+       SELECT ?highestSensor ?highestVal ?wktHigh
+       WHERE {
+         ?obs a sosa:Observation ;
+             sosa:observedProperty hyobs:SoluteConcentrationMedian ;
+             hyobs:hasAnalyte hyobs:DissolvedOrganicCarbon ;
+             sosa:madeBySensor ?highestSensor ;
+             sosa:resultTime ?t ;
+             sosa:hasResult ?res .
+
+         ?res qudt:numericValue ?highestVal .
+         ?highestSensor geo:hasGeometry ?gHigh .
+         ?gHigh geo:asWKT ?wktHigh .
+
+         FILTER(YEAR(?t) = 2010)
+       }
+       ORDER BY DESC(xsd:decimal(?highestVal))
+       LIMIT 1
+     }
+
+     {
+       SELECT ?lowestSensor ?lowestVal ?wktLow
+       WHERE {
+         ?obs a sosa:Observation ;
+             sosa:observedProperty hyobs:SoluteConcentrationMedian ;
+             hyobs:hasAnalyte hyobs:DissolvedOrganicCarbon ;
+             sosa:madeBySensor ?lowestSensor ;
+             sosa:resultTime ?t ;
+             sosa:hasResult ?res .
+
+         ?res qudt:numericValue ?lowestVal .
+         ?lowestSensor geo:hasGeometry ?gLow .
+         ?gLow geo:asWKT ?wktLow .
+
+         FILTER(YEAR(?t) = 2010)
+       }
+       ORDER BY xsd:decimal(?lowestVal)
+       LIMIT 1
+     }
+
+     BIND(bif:st_distance(?wktHigh, ?wktLow) AS ?distance)
+   }
+ }",gpt-5.5,c01,small,Only_ClassesProperties,6,2026-08-03T22:43:15.227042,74.82108116149902,True,0.2037037037037037,0.6666666666666667,0.978494623655914,0.7642975449562073,0.8713960647583008,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:distance,No,"The gold result contains a complete binding with five variables (highestSensor, highestVal, lowestSensor, lowestVal, distance) and a specific distance value, whereas the generated result only declares a single variable (distance) and provides no bindings at all. Because the content and variable sets differ, the two results are not equivalent."
+Which stations lie within a 10 km radius of station “SN_OBF01800_m”?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+
+SELECT DISTINCT ?station ?stationLabel ?distanceKm
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?target a sosa:Sensor ;
+      geo:hasGeometry/geo:asWKT ?targetWKT .
+
+    {
+      ?target schema:name ?targetName .
+      FILTER(STR(?targetName) = ""SN_OBF01800_m"")
+    }
+    UNION
+    {
+      ?target dct:identifier ?targetIdentifier .
+      FILTER(STR(?targetIdentifier) = ""SN_OBF01800_m"")
+    }
+
+    ?station a sosa:Sensor ;
+      geo:hasGeometry/geo:asWKT ?stationWKT .
+
+    OPTIONAL { ?station schema:name ?stationName . }
+    OPTIONAL { ?station dct:identifier ?stationIdentifier . }
+
+    BIND(COALESCE(STR(?stationName), STR(?stationIdentifier), STR(?station)) AS ?stationLabel)
+    BIND(<http://www.opengis.net/def/function/geosparql/distance>(?targetWKT, ?stationWKT, unit:KiloM) AS ?distanceKm)
+
+    FILTER(?station != ?target)
+    FILTER(?distanceKm <= 10)
+  }
+}
+ORDER BY ?distanceKm","PREFIX geo:    <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?neighborSensor ?neighborName ?distance
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?refSensor a sosa:Sensor ;
+              schema:name ""SN_OBF01800_m""^^xsd:string ;
+              geo:hasGeometry ?refGeom .
+    ?refGeom geo:asWKT ?refWkt .
+
+    ?neighborSensor a sosa:Sensor ;
+                    geo:hasGeometry ?neighborGeom ;
+                    schema:name ?neighborName .
+    ?neighborGeom geo:asWKT ?neighborWkt .
+
+    FILTER(?neighborSensor != ?refSensor)
+
+    BIND(bif:st_distance(?refWkt, ?neighborWkt) AS ?distance)
+    FILTER(?distance <= 10)
+  }
+}
+ORDER BY ?distance",gpt-5.5,c01,small,Only_ClassesProperties,7,2026-08-03T22:44:35.098942,44.51919960975647,True,0.15625,0.5037037037037038,0.9441264041525078,0.7340788841247559,0.8391026258468628,0.8534918135881966,0.7905694150420948,True,,True,,error,generated_query_failed: HTTP_ERROR: 500 Server Error: SPARQL Request Failed for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,
+What is the name of the station with the ID 219?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?name
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?station a sosa:Sensor ;
+      dct:identifier ?id ;
+      schema:name ?name .
+    FILTER(STR(?id) = ""219"")
+  }
+}","PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX dct:  <http://purl.org/dc/terms/>
+
+SELECT ?stationName ?stationId
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor a sosa:Sensor ;
+           dct:identifier ?stationId;
+		   schema:name ?stationName.
+    FILTER(str(?stationId) = ""219"")
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,8,2026-08-03T22:45:23.220189,4.741616725921631,True,0.41666666666666663,0.917910447761194,0.9883324222148014,0.9625251293182373,0.9754288196563721,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.5,1.0,0.5,0.6666666666666666,all_values,No,"The gold bindings contain two variables (stationName and stationId) with values ""BW_CEN515"" and ""219"" respectively, while the generated bindings only contain a single variable (name) with the value ""BW_CEN515"" and omit the stationId variable. Because the variable sets and the included data differ, the two result sets are not equivalent."
+Which catchment recorded the highest annual median NO3N in 2010?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?catchment ?catchmentName ?annualMedianNO3N
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?obs a sosa:Observation .
+    ?obs (hyobs:hasAnalyte|sosa:observedProperty) envthes:30212 .
+    ?obs sosa:resultTime ?time .
+    ?obs sosa:hasResult ?result .
+    ?result qudt:numericValue ?value .
+    ?obs (sosa:hasFeatureOfInterest|sosa:madeBySensor/hyobs:monitorsCatchment) ?catchment .
+    OPTIONAL { ?catchment schema:name ?catchmentName . }
+    FILTER(STRSTARTS(STR(?time), ""2010""))
+    BIND(xsd:double(?value) AS ?annualMedianNO3N)
+  }
+}
+ORDER BY DESC(?annualMedianNO3N)
+LIMIT 1","PREFIX hyobs:  <https://w3id.org/hmontology/>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX chebi:  <http://purl.obolibrary.org/obo/CHEBI_>
+
+SELECT ?catchment ?medianNO3N
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?catchment (MAX(xsd:decimal(?val)) AS ?medianNO3N)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty hyobs:NO3NConcentrationMedian ;
+            hyobs:hasAnalyte chebi:17632 ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+        FILTER(YEAR(?t) = 2010)
+        
+      }
+      GROUP BY ?catchment
+      ORDER BY DESC(?medianNO3N)
+      LIMIT 1
+    }
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,9,2026-08-03T22:45:32.951052,53.93107867240906,True,0.05555555555555555,0.36423841059602646,0.9643308401091504,0.8866364359855652,0.9254836440086365,0.7559289460184544,0.7715167498104595,True,,True,,error,generated_query_failed: HTTP_ERROR: 500 Server Error: SPARQL Request Failed for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,
+Which catchments recorded annual median PO4P > 0.10 mg/L in 2015?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?catchment ?catchmentName ?medianPO4P
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?observation a sosa:Observation ;
+      sosa:hasFeatureOfInterest ?catchment ;
+      hyobs:hasAnalyte ?analyte ;
+      sosa:observedProperty hyobs:qMedian ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result qudt:numericValue ?medianPO4P .
+    OPTIONAL { ?catchment schema:name ?catchmentName . }
+    FILTER(CONTAINS(UCASE(STR(?analyte)), ""PO4P""))
+    FILTER(YEAR(xsd:dateTime(?time)) = 2015)
+    FILTER(xsd:decimal(?medianPO4P) > 0.10)
+  }
+}","PREFIX hyobs:  <https://w3id.org/hmontology/>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX chebi:  <http://purl.obolibrary.org/obo/CHEBI_>
+
+SELECT ?catchment ?medianPO4P
+WHERE 
+{
+  GRAPH <hydroturtle/quadica> 
+  {
+    {
+      SELECT ?catchment (MAX(xsd:decimal(?val)) AS ?medianPO4P)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty hyobs:PO4PConcentrationMedian ;
+            hyobs:hasAnalyte chebi:18367 ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        FILTER(YEAR(?t) = 2015)
+      }
+      GROUP BY ?catchment
+    }
+
+    FILTER(?medianPO4P > 0.10)
+  }
+}
+ORDER BY DESC(?medianPO4P)",gpt-5.5,c01,small,Only_ClassesProperties,10,2026-08-03T22:46:30.034086,12.249863147735596,True,0.1111111111111111,0.3747016706443914,0.9882785090322374,0.8948304057121277,0.9415544271469116,0.7526178090063818,0.5999999999999999,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:catchment,medianPO4P",No,"The gold result set contains numerous catchment entries with median PO4P values all above 0.10 mg/L, whereas the generated result set is empty. Because the two bindings differ in content, they are not equivalent."
+What are the aridity index and the mean elevation of catchments with an area greater than 50km?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+
+SELECT ?catchment ?aridityIndex ?meanElevation
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment hyobs:hasCatchmentAreaKm2 ?areaKm2 ;
+               hyobs:aridityIndex ?aridityIndex ;
+               hyobs:meanElevation ?meanElevation .
+    FILTER(?areaKm2 > 50)
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?aridityIndex ?meanElevation ?area
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?catchment a envthes:30212;
+    hyobs:aridityIndex ?aridityIndex;
+    hyobs:meanElevation ?elevationbNode;
+    hyobs:hasCatchmentArea ?areaNode .
+        
+        ?areaNode qudt:numericValue ?area .
+        ?elevationbNode qudt:numericValue ?meanElevation .
+        
+        FILTER (xsd:decimal(?area) > 50)
+    }
+  }",gpt-5.5,c01,small,Only_ClassesProperties,11,2026-08-03T22:46:46.884353,8.60558009147644,True,0.125,0.4884615384615385,0.9855803019806249,0.8040956854820251,0.8948379755020142,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:catchment,aridityIndex,meanElevation",No,"LLM judge failed: Error code: 400 - {'error': {'message': 'litellm.BadRequestError: Hosted_vllmException - {""error"":{""message"":""Input length (343342) exceeds model\'s maximum context length (131072)."",""type"":""BadRequestError"",""param"":null,""code"":400}}', 'type': 'None', 'param': 'None', 'code': '400'}}"
+What are the minimum and maximum discharge observed at station 'BW_CTA913'?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT (MIN(?value) AS ?minDischarge) (MAX(?value) AS ?maxDischarge)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?observation sosa:madeBySensor ?station ;
+                 sosa:observedProperty envthes:30212 ;
+                 sosa:hasResult ?result .
+    ?station dct:identifier ""BW_CTA913"" .
+    ?result qudt:numericValue ?value .
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX schema:  <http://schema.org/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (MIN(xsd:decimal(?val)) AS ?minDischarge) (MAX(xsd:decimal(?val)) AS ?maxDischarge)
+WHERE {
+  GRAPH <hydroturtle/quadica>
+  {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:21242 ;
+            sosa:madeBySensor ?sensor ;
+            sosa:hasResult ?res .
+        ?res qudt:numericValue ?val .
+        ?sensor a sosa:Sensor ;
+            schema:name ?stationName .
+        FILTER(str(?stationName) = ""BW_CTA913"")
+      }
+    }",gpt-5.5,c01,small,Only_ClassesProperties,12,2026-08-03T22:47:05.900917,8.634186506271362,True,0.16666666666666666,0.5615141955835963,0.9949366763261821,0.8045161366462708,0.899726390838623,0.8164965809277259,0.8164965809277259,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:minDischarge,maxDischarge",No,"The gold result contains a binding with the variables minDischarge and maxDischarge set to the decimal values 1.808 and 39.858 respectively. The generated result provides a single empty binding with no variables bound, so the variable values and presence do not match. Therefore the two result sets are not equivalent."
+What are the minimum and maximum precipitation across all gauging stations?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (MIN(xsd:decimal(?precipitation)) AS ?minPrecipitation) (MAX(xsd:decimal(?precipitation)) AS ?maxPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?station a sosa:Sensor ;
+      hyobs:monitorsCatchment ?catchment .
+    ?catchment hyobs:precipitationAnnualMm ?precipitation .
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?minPrecipitation ?maxPrecipitation
+    WHERE {
+      GRAPH <hydroturtle/quadica> {
+        {
+          SELECT
+            (MIN(xsd:decimal(?val)) AS ?minPrecipitation)
+            (MAX(xsd:decimal(?val)) AS ?maxPrecipitation)
+          WHERE {
+            ?obs a sosa:Observation ;
+                sosa:observedProperty envthes:30106 ;
+                sosa:hasResult ?res .
+            ?res qudt:numericValue ?val .
+          }
+        }
+      }
+    }",gpt-5.5,c01,small,Only_ClassesProperties,13,2026-08-03T22:47:20.586045,10.09778618812561,True,0.3333333333333333,0.4901960784313726,0.9245003270420483,0.7379947304725647,0.8312475681304932,0.9486832980505138,0.9999999999999998,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:minPrecipitation,maxPrecipitation",No,"The gold binding reports a minimum precipitation of 0 and a maximum of 512, whereas the generated binding reports a minimum of 505.72341932862 and a maximum of 1568.72058441859. Since the numeric values for both the minimum and maximum precipitation differ, the two result sets are not equivalent."
+What is the average annual Dissolved Organic Carbon (DOC) in Catchment 193 during 2000–2010?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?year (AVG(?value) AS ?averageAnnualDOC)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?observation a sosa:Observation ;
+      sosa:hasFeatureOfInterest ?catchment ;
+      hyobs:hasAnalyte envthes:30212 ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result qudt:numericValue ?value .
+    ?catchment hyobs:objectId 193 .
+    BIND(YEAR(?time) AS ?year)
+    FILTER(?year >= 2000 && ?year <= 2010)
+  }
+}
+GROUP BY ?year
+ORDER BY ?year","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa:  <http://www.w3.org/ns/sosa/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?catchment (AVG(?annualDOC) AS ?avgAnnualDOC)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?catchment ?year (AVG(xsd:decimal(?val)) AS ?annualDOC)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty hyobs:SoluteConcentrationMean ;
+            hyobs:hasAnalyte hyobs:DissolvedOrganicCarbon ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        FILTER(?catchment = hyobs:catchment_193)
+        BIND(YEAR(?t) AS ?year)
+        FILTER(?year >= 2000 && ?year <= 2010)
+      }
+      GROUP BY ?catchment ?year
+    }
+  }
+}
+GROUP BY ?catchment",gpt-5.5,c01,small,Only_ClassesProperties,14,2026-08-03T22:47:37.576033,11.235914945602417,True,0.41666666666666663,0.610236220472441,0.9965227059662572,0.8549997806549072,0.9257612228393555,0.8728715609439696,0.9128709291752769,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold result contains a binding that provides the average annual DOC value (3.678509259259259) for catchment_193, while the generated result has no bindings at all (an empty list) and uses different variable names. Therefore, the generated result does not convey the same information as the gold result."
+In which month did station 'BW_CEL904' experience the highest median NO3N in 2005?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?month ?medianNO3N
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?obs a sosa:Observation ;
+      sosa:madeBySensor ?station ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?obs (hyobs:hasAnalyte|sosa:observedProperty) ?analyte .
+    ?result qudt:numericValue ?rawMedianNO3N .
+
+    OPTIONAL { ?station dct:identifier ?stationIdentifier . }
+    OPTIONAL { ?station schema:name ?stationName . }
+    OPTIONAL { ?analyte dct:identifier ?analyteIdentifier . }
+    OPTIONAL { ?analyte schema:name ?analyteName . }
+
+    FILTER(
+      COALESCE(STR(?stationIdentifier), """") = ""BW_CEL904"" ||
+      COALESCE(STR(?stationName), """") = ""BW_CEL904"" ||
+      STRENDS(STR(?station), ""BW_CEL904"")
+    )
+    FILTER(
+      UCASE(COALESCE(STR(?analyteIdentifier), """")) = ""NO3N"" ||
+      UCASE(COALESCE(STR(?analyteName), """")) = ""NO3N"" ||
+      UCASE(STR(?analyte)) = ""NO3N"" ||
+      STRENDS(UCASE(STR(?analyte)), ""NO3N"")
+    )
+    FILTER(STRSTARTS(STR(?time), ""2005""))
+    BIND(xsd:integer(SUBSTR(STR(?time), 6, 2)) AS ?month)
+    BIND(xsd:double(?rawMedianNO3N) AS ?medianNO3N)
+  }
+}
+ORDER BY DESC(?medianNO3N)
+LIMIT 1","PREFIX hyobs:  <https://w3id.org/hmontology/>
+ PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+ PREFIX schema: <http://schema.org/>
+ PREFIX qudt:   <http://qudt.org/schema/qudt/>
+ PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+ PREFIX chebi:  <http://purl.obolibrary.org/obo/CHEBI_>
+
+ SELECT ?month ?medianNO3N
+ WHERE {
+   GRAPH <hydroturtle/quadica> {
+     {
+       SELECT ?month (MAX(xsd:decimal(?val)) AS ?medianNO3N)
+       WHERE {
+         ?sensor a sosa:Sensor ;
+                 schema:name ?stationName.
+       
+       FILTER(str(?stationName) = ""BW_CEL904"")
+
+         ?obs a sosa:Observation ;
+             sosa:madeBySensor ?sensor ;
+             sosa:observedProperty hyobs:NO3NConcentrationMedian ;
+             hyobs:hasAnalyte chebi:17632 ;
+             sosa:resultTime ?t ;
+             sosa:hasResult ?res .
+
+         ?res qudt:numericValue ?val .
+
+         FILTER(YEAR(?t) = 2005)
+
+         BIND(MONTH(?t) AS ?month)
+       }
+       GROUP BY ?month
+       ORDER BY DESC(?medianNO3N)
+       LIMIT 1
+     }
+   }
+ }",gpt-5.5,c01,small,Only_ClassesProperties,15,2026-08-03T22:47:53.033784,98.09986448287964,True,0.05555555555555555,0.29454545454545455,0.9466030570784414,0.8490946292877197,0.8978488445281982,0.6276459144608479,0.857142857142857,True,,True,,error,generated_query_failed: HTTP_ERROR: 500 Server Error: SPARQL Request Failed for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,
+Which years experienced a national median discharge below the long-term median in Germany?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?year ?nationalMedianDischarge ?longTermMedianDischarge
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    {
+      SELECT ?year (AVG(?candidate) AS ?nationalMedianDischarge)
+      WHERE {
+        {
+          SELECT ?year ?candidate
+          WHERE {
+            ?obs rdf:type sosa:Observation ;
+                 sosa:observedProperty hyobs:qMedian ;
+                 sosa:hasFeatureOfInterest ?catchment ;
+                 sosa:resultTime ?time ;
+                 sosa:hasResult ?result .
+            ?result qudt:numericValue ?value .
+            ?catchment hyobs:fractionAreaInGermany ?fractionAreaInGermany .
+            FILTER(xsd:decimal(?fractionAreaInGermany) > 0)
+            BIND(YEAR(?time) AS ?year)
+            BIND(xsd:decimal(?value) AS ?candidate)
+          }
+          GROUP BY ?year ?candidate
+        }
+        {
+          SELECT ?year (COUNT(?allObs) AS ?nTotal)
+          WHERE {
+            ?allObs rdf:type sosa:Observation ;
+                    sosa:observedProperty hyobs:qMedian ;
+                    sosa:hasFeatureOfInterest ?allCatchment ;
+                    sosa:resultTime ?allTime ;
+                    sosa:hasResult ?allResult .
+            ?allResult qudt:numericValue ?allValue .
+            ?allCatchment hyobs:fractionAreaInGermany ?allFractionAreaInGermany .
+            FILTER(xsd:decimal(?allFractionAreaInGermany) > 0)
+            BIND(YEAR(?allTime) AS ?year)
+          }
+          GROUP BY ?year
+        }
+        OPTIONAL {
+          SELECT ?year ?candidate (COUNT(?lowerObs) AS ?lessCount)
+          WHERE {
+            {
+              SELECT ?year ?candidate
+              WHERE {
+                ?candidateObs rdf:type sosa:Observation ;
+                              sosa:observedProperty hyobs:qMedian ;
+                              sosa:hasFeatureOfInterest ?candidateCatchment ;
+                              sosa:resultTime ?candidateTime ;
+                              sosa:hasResult ?candidateResult .
+                ?candidateResult qudt:numericValue ?candidateValue .
+                ?candidateCatchment hyobs:fractionAreaInGermany ?candidateFractionAreaInGermany .
+                FILTER(xsd:decimal(?candidateFractionAreaInGermany) > 0)
+                BIND(YEAR(?candidateTime) AS ?year)
+                BIND(xsd:decimal(?candidateValue) AS ?candidate)
+              }
+              GROUP BY ?year ?candidate
+            }
+            ?lowerObs rdf:type sosa:Observation ;
+                      sosa:observedProperty hyobs:qMedian ;
+                      sosa:hasFeatureOfInterest ?lowerCatchment ;
+                      sosa:resultTime ?lowerTime ;
+                      sosa:hasResult ?lowerResult .
+            ?lowerResult qudt:numericValue ?lowerValue .
+            ?lowerCatchment hyobs:fractionAreaInGermany ?lowerFractionAreaInGermany .
+            FILTER(xsd:decimal(?lowerFractionAreaInGermany) > 0)
+            BIND(YEAR(?lowerTime) AS ?lowerYear)
+            BIND(xsd:decimal(?lowerValue) AS ?lowerValueDecimal)
+            FILTER(?lowerYear = ?year && ?lowerValueDecimal < ?candidate)
+          }
+          GROUP BY ?year ?candidate
+        }
+        OPTIONAL {
+          SELECT ?year ?candidate (COUNT(?greaterObs) AS ?greaterCount)
+          WHERE {
+            {
+              SELECT ?year ?candidate
+              WHERE {
+                ?candidateObs2 rdf:type sosa:Observation ;
+                               sosa:observedProperty hyobs:qMedian ;
+                               sosa:hasFeatureOfInterest ?candidateCatchment2 ;
+                               sosa:resultTime ?candidateTime2 ;
+                               sosa:hasResult ?candidateResult2 .
+                ?candidateResult2 qudt:numericValue ?candidateValue2 .
+                ?candidateCatchment2 hyobs:fractionAreaInGermany ?candidateFractionAreaInGermany2 .
+                FILTER(xsd:decimal(?candidateFractionAreaInGermany2) > 0)
+                BIND(YEAR(?candidateTime2) AS ?year)
+                BIND(xsd:decimal(?candidateValue2) AS ?candidate)
+              }
+              GROUP BY ?year ?candidate
+            }
+            ?greaterObs rdf:type sosa:Observation ;
+                        sosa:observedProperty hyobs:qMedian ;
+                        sosa:hasFeatureOfInterest ?greaterCatchment ;
+                        sosa:resultTime ?greaterTime ;
+                        sosa:hasResult ?greaterResult .
+            ?greaterResult qudt:numericValue ?greaterValue .
+            ?greaterCatchment hyobs:fractionAreaInGermany ?greaterFractionAreaInGermany .
+            FILTER(xsd:decimal(?greaterFractionAreaInGermany) > 0)
+            BIND(YEAR(?greaterTime) AS ?greaterYear)
+            BIND(xsd:decimal(?greaterValue) AS ?greaterValueDecimal)
+            FILTER(?greaterYear = ?year && ?greaterValueDecimal > ?candidate)
+          }
+          GROUP BY ?year ?candidate
+        }
+        BIND(COALESCE(?lessCount, 0) AS ?less)
+        BIND(COALESCE(?greaterCount, 0) AS ?greater)
+        FILTER(?less <= (?nTotal / 2) && ?greater <= (?nTotal / 2))
+      }
+      GROUP BY ?year
+    }
+    {
+      SELECT (AVG(?candidateGlobal) AS ?longTermMedianDischarge)
+      WHERE {
+        {
+          SELECT ?candidateGlobal
+          WHERE {
+            ?globalObs rdf:type sosa:Observation ;
+                       sosa:observedProperty hyobs:qMedian ;
+                       sosa:hasFeatureOfInterest ?globalCatchment ;
+                       sosa:hasResult ?globalResult .
+            ?globalResult qudt:numericValue ?globalValue .
+            ?globalCatchment hyobs:fractionAreaInGermany ?globalFractionAreaInGermany .
+            FILTER(xsd:decimal(?globalFractionAreaInGermany) > 0)
+            BIND(xsd:decimal(?globalValue) AS ?candidateGlobal)
+          }
+          GROUP BY ?candidateGlobal
+        }
+        {
+          SELECT (COUNT(?allGlobalObs) AS ?nGlobal)
+          WHERE {
+            ?allGlobalObs rdf:type sosa:Observation ;
+                          sosa:observedProperty hyobs:qMedian ;
+                          sosa:hasFeatureOfInterest ?allGlobalCatchment ;
+                          sosa:hasResult ?allGlobalResult .
+            ?allGlobalResult qudt:numericValue ?allGlobalValue .
+            ?allGlobalCatchment hyobs:fractionAreaInGermany ?allGlobalFractionAreaInGermany .
+            FILTER(xsd:decimal(?allGlobalFractionAreaInGermany) > 0)
+          }
+        }
+        OPTIONAL {
+          SELECT ?candidateGlobal (COUNT(?lowerGlobalObs) AS ?lessGlobalCount)
+          WHERE {
+            {
+              SELECT ?candidateGlobal
+              WHERE {
+                ?candidateGlobalObs rdf:type sosa:Observation ;
+                                    sosa:observedProperty hyobs:qMedian ;
+                                    sosa:hasFeatureOfInterest ?candidateGlobalCatchment ;
+                                    sosa:hasResult ?candidateGlobalResult .
+                ?candidateGlobalResult qudt:numericValue ?candidateGlobalValue .
+                ?candidateGlobalCatchment hyobs:fractionAreaInGermany ?candidateGlobalFractionAreaInGermany .
+                FILTER(xsd:decimal(?candidateGlobalFractionAreaInGermany) > 0)
+                BIND(xsd:decimal(?candidateGlobalValue) AS ?candidateGlobal)
+              }
+              GROUP BY ?candidateGlobal
+            }
+            ?lowerGlobalObs rdf:type sosa:Observation ;
+                            sosa:observedProperty hyobs:qMedian ;
+                            sosa:hasFeatureOfInterest ?lowerGlobalCatchment ;
+                            sosa:hasResult ?lowerGlobalResult .
+            ?lowerGlobalResult qudt:numericValue ?lowerGlobalValue .
+            ?lowerGlobalCatchment hyobs:fractionAreaInGermany ?lowerGlobalFractionAreaInGermany .
+            FILTER(xsd:decimal(?lowerGlobalFractionAreaInGermany) > 0)
+            BIND(xsd:decimal(?lowerGlobalValue) AS ?lowerGlobalValueDecimal)
+            FILTER(?lowerGlobalValueDecimal < ?candidateGlobal)
+          }
+          GROUP BY ?candidateGlobal
+        }
+        OPTIONAL {
+          SELECT ?candidateGlobal (COUNT(?greaterGlobalObs) AS ?greaterGlobalCount)
+          WHERE {
+            {
+              SELECT ?candidateGlobal
+              WHERE {
+                ?candidateGlobalObs2 rdf:type sosa:Observation ;
+                                     sosa:observedProperty hyobs:qMedian ;
+                                     sosa:hasFeatureOfInterest ?candidateGlobalCatchment2 ;
+                                     sosa:hasResult ?candidateGlobalResult2 .
+                ?candidateGlobalResult2 qudt:numericValue ?candidateGlobalValue2 .
+                ?candidateGlobalCatchment2 hyobs:fractionAreaInGermany ?candidateGlobalFractionAreaInGermany2 .
+                FILTER(xsd:decimal(?candidateGlobalFractionAreaInGermany2) > 0)
+                BIND(xsd:decimal(?candidateGlobalValue2) AS ?candidateGlobal)
+              }
+              GROUP BY ?candidateGlobal
+            }
+            ?greaterGlobalObs rdf:type sosa:Observation ;
+                              sosa:observedProperty hyobs:qMedian ;
+                              sosa:hasFeatureOfInterest ?greaterGlobalCatchment ;
+                              sosa:hasResult ?greaterGlobalResult .
+            ?greaterGlobalResult qudt:numericValue ?greaterGlobalValue .
+            ?greaterGlobalCatchment hyobs:fractionAreaInGermany ?greaterGlobalFractionAreaInGermany .
+            FILTER(xsd:decimal(?greaterGlobalFractionAreaInGermany) > 0)
+            BIND(xsd:decimal(?greaterGlobalValue) AS ?greaterGlobalValueDecimal)
+            FILTER(?greaterGlobalValueDecimal > ?candidateGlobal)
+          }
+          GROUP BY ?candidateGlobal
+        }
+        BIND(COALESCE(?lessGlobalCount, 0) AS ?lessGlobal)
+        BIND(COALESCE(?greaterGlobalCount, 0) AS ?greaterGlobal)
+        FILTER(?lessGlobal <= (?nGlobal / 2) && ?greaterGlobal <= (?nGlobal / 2))
+      }
+    }
+    FILTER(?nationalMedianDischarge < ?longTermMedianDischarge)
+  }
+}
+ORDER BY ?year","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa:  <http://www.w3.org/ns/sosa/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?year ?nationalMedianQ ?longTermMedianQ
+WHERE {
+  GRAPH <hydroturtle/quadica> 
+  {
+    {
+      SELECT ?year (AVG(xsd:decimal(?val)) AS ?nationalMedianQ)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty hyobs:DischargeMedian ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+        ?res qudt:numericValue ?val .
+        BIND(YEAR(?t) AS ?year)
+      }
+      GROUP BY ?year
+    }
+    {
+      SELECT (AVG(xsd:decimal(?val2)) AS ?longTermMedianQ)
+      WHERE {
+        ?obs2 a sosa:Observation ;
+              sosa:observedProperty hyobs:DischargeMedian ;
+              sosa:hasResult ?res2 .
+        ?res2 qudt:numericValue ?val2 .
+      }
+    }
+
+    FILTER(?nationalMedianQ < ?longTermMedianQ)
+  }
+}
+ORDER BY ?year",gpt-5.5,c01,small,Only_ClassesProperties,16,2026-08-03T22:49:34.852113,92.33727693557739,True,0.030888030888030885,0.14227531903339674,0.9764467474148965,0.7903444170951843,0.8833955526351929,0.7730206825239259,0.9258200997725514,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:year,No,"The gold bindings contain a list of years with their national median discharge values and the constant long‑term median, indicating many years where the national median is below the long‑term median. The generated bindings are empty, providing no rows at all. Therefore the two result sets are not equivalent."
+How many months in 1997 did station 'BW_CKS022' have flow-normalized NO3N above 10.5 mg/L?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (COUNT(DISTINCT ?month) AS ?months)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?obs sosa:madeBySensor ?station ;
+         sosa:resultTime ?time ;
+         sosa:hasResult ?result .
+    ?result qudt:numericValue ?value .
+
+    {
+      { ?station dct:identifier ?stationCode . FILTER(STR(?stationCode) = ""BW_CKS022"") }
+      UNION
+      { ?station schema:name ?stationName . FILTER(STR(?stationName) = ""BW_CKS022"") }
+      UNION
+      { FILTER(STRENDS(STR(?station), ""BW_CKS022"")) }
+    }
+
+    {
+      ?obs hyobs:hasAnalyte ?analyte ;
+           sosa:usedProcedure ?procedure .
+      OPTIONAL { ?analyte schema:name ?analyteName . }
+      OPTIONAL { ?analyte dct:identifier ?analyteId . }
+      OPTIONAL { ?procedure schema:name ?procedureName . }
+      OPTIONAL { ?procedure dct:identifier ?procedureId . }
+      BIND(UCASE(CONCAT(STR(?analyte), "" "", COALESCE(STR(?analyteName), """"), "" "", COALESCE(STR(?analyteId), """"))) AS ?analyteText)
+      BIND(LCASE(CONCAT(STR(?procedure), "" "", COALESCE(STR(?procedureName), """"), "" "", COALESCE(STR(?procedureId), """"))) AS ?procedureText)
+      FILTER(CONTAINS(?analyteText, ""NO3N""))
+      FILTER(CONTAINS(?procedureText, ""flow"") && CONTAINS(?procedureText, ""normal""))
+    }
+    UNION
+    {
+      ?obs sosa:observedProperty ?property .
+      OPTIONAL { ?property schema:name ?propertyName . }
+      OPTIONAL { ?property dct:identifier ?propertyId . }
+      BIND(CONCAT(STR(?property), "" "", COALESCE(STR(?propertyName), """"), "" "", COALESCE(STR(?propertyId), """")) AS ?propertyText)
+      FILTER(CONTAINS(UCASE(?propertyText), ""NO3N""))
+      FILTER(CONTAINS(LCASE(?propertyText), ""flow"") && CONTAINS(LCASE(?propertyText), ""normal""))
+    }
+
+    FILTER(STRSTARTS(STR(?time), ""1997-""))
+    FILTER(xsd:double(?value) > 10.5)
+    BIND(SUBSTR(STR(?time), 1, 7) AS ?month)
+  }
+}","PREFIX hyobs:  <https://w3id.org/hmontology/>
+PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX chebi:  <http://purl.obolibrary.org/obo/CHEBI_>
+
+SELECT (COUNT(DISTINCT ?month) AS ?monthsAbove10point5)
+WHERE {
+  GRAPH <hydroturtle/quadica> {
+    ?sensor a sosa:Sensor ;
+            schema:name ?stationName. 
+    FILTER(lcase(str(?stationName)) = ""bw_cks022"")
+
+    ?obs a sosa:Observation ;
+        sosa:madeBySensor ?sensor ;
+        sosa:observedProperty hyobs:SoluteConcentrationFlowNormalizedMean ;
+        hyobs:hasAnalyte chebi:17632 ;
+        sosa:resultTime ?t ;
+        sosa:hasResult ?res .
+
+    ?res qudt:numericValue ?val .
+
+    FILTER(YEAR(?t) = 1997)
+    FILTER(xsd:decimal(?val) > 10.5)
+
+    BIND(CONCAT(STR(YEAR(?t)), ""-"", STR(MONTH(?t))) AS ?month)
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,17,2026-08-03T22:51:18.866654,52.216686964035034,True,0.041666666666666664,0.2339312406576981,0.9131468172865616,0.7883606553077698,0.8507537245750427,0.7831108474982938,0.8451542547285165,True,,True,,error,generated_query_failed: HTTP_ERROR: 504 Server Error: Gateway Time-out for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,

@@ -1,0 +1,785 @@
+question,generated_sparql,actual_sparql,model_name,experiment_name,schema_mode,schema_label,question_id,run_timestamp,execution_time_sec,is_valid_final,sim_content,sim_struct_string_similarity,sim_struct_graph_similarity,sim_struct_semantic_similarity,sim_struct_combined_similarity,sim_lang_frequency_similarity,sim_lang_boolean_similarity,val_grammar_ok,val_grammar_error,val_preparation_ok,val_preparation_error,metric_query_type,metric_error,metric_exact_count,metric_jaccard,metric_exact_match,metric_precision,metric_recall,metric_f1,metric_answer_overlap_jaccard,metric_answer_overlap_precision,metric_answer_overlap_recall,metric_answer_overlap_f1,metric_answer_overlap_basis,metric_llm_equivalence_decision,metric_llm_equivalence_reason
+Where is gauging station “Water of Dye at Charr” located?,"PREFIX schema: <http://schema.org/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+SELECT ?station ?wkt
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?station schema:name ""Water of Dye at Charr"" ;
+             geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?wkt .
+  }
+}","PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX wgs84_pos: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+
+SELECT ?name ?wkt ?lon ?lat ?elevation
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor a sosa:Sensor ;
+            schema:name ?name ;
+            geo:hasGeometry ?geom .
+
+    FILTER(lcase(str(?name)) = ""water of dye at charr"")
+
+    ?geom geo:asWKT ?wkt .
+    OPTIONAL { ?geom wgs84_pos:alt ?elevation }
+
+    BIND(bif:st_x(?wkt) AS ?lon)
+    BIND(bif:st_y(?wkt) AS ?lat)
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,0,2026-08-04T04:36:17.215364,6.163105726242065,True,0.1111111111111111,0.4006968641114983,0.9625334218796219,0.7294880151748657,0.846010684967041,0.4999999999999999,0.6324555320336759,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:wkt,No,"The gold result contains a binding that provides the station name ""Water of Dye at Charr"" together with its location (WKT point, longitude, latitude, and elevation). The generated result is empty and provides no binding for the station or its location. Therefore, the two result sets are not equivalent."
+What are the gauging station locations of the five largest catchments by area?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX qudt: <https://qudt.org/schema/qudt/>
+
+SELECT ?station ?stationLocation ?catchment ?area
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?station hydrorwth:monitorsCatchment ?catchment ;
+             geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?stationLocation .
+    ?catchment hyobs:hasCatchmentArea ?areaValue .
+    ?areaValue qudt:numericValue ?area .
+  }
+}
+ORDER BY DESC(?area)
+LIMIT 5","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX wgs84_pos: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?sensor ?stationName ?catchment ?area ?wkt ?lon ?lat ?elevation
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor a sosa:Sensor ;
+            hyobs:monitorsCatchment ?catchment ;
+            geo:hasGeometry ?geom .
+
+    ?catchment hyobs:hasCatchmentArea ?areaNode .
+    ?areaNode qudt:numericValue ?area .
+
+    OPTIONAL { ?sensor schema:name ?stationName }
+
+    ?geom geo:asWKT ?wkt .
+    OPTIONAL { ?geom wgs84_pos:alt ?elevation }
+
+    BIND(bif:st_x(?wkt) AS ?lon)
+    BIND(bif:st_y(?wkt) AS ?lat)
+  }
+}
+ORDER BY DESC(xsd:decimal(?area))
+LIMIT 5",gpt-5.5,c01,small,Only_ClassesProperties,1,2026-08-04T04:36:25.880564,9.403857469558716,True,0.2333333333333333,0.4733178654292344,0.9644831058833601,0.8342610001564026,0.8993720412254333,0.5773502691896258,0.8164965809277261,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:catchment,area",No,"The gold result contains five bindings with detailed information (station name, catchment URI, area, coordinates, elevation) for the five largest catchments, while the generated result is an empty bindings list with different variable names and no data. Therefore, the two result sets are not equivalent."
+What is the boundary of the catchment monitored by sensor 3003?,"PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?boundary
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor dct:identifier ?sensorId .
+    FILTER(STR(?sensorId) = ""3003"")
+    ?sensor (hydrorwth:monitorsCatchment|hyobs:monitorsCatchment) ?catchment .
+    ?catchment geo:hasGeometry ?geometry .
+    ?geometry geo:asWKT ?boundary .
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX dct:  <http://purl.org/dc/terms/>
+
+SELECT ?catchment ?wkt1 
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor a sosa:Sensor ;
+            dct:identifier ?sensorId ;
+            hyobs:monitorsCatchment ?catchment .
+    FILTER(str(?sensorId) = ""3003"")
+
+    ?catchment geo:hasGeometry ?g1 .
+    ?g1 geo:asWKT ?wkt1 .
+
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,2,2026-08-04T04:36:37.687294,12.156294584274292,True,0.24999999999999997,0.5787037037037037,0.9817340175673488,0.9117579460144043,0.9467459917068481,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.5,1.0,0.5,0.6666666666666666,all_values,Yes,"The gold result returns the catchment URI and its geometry (wkt1) as a POLYGON, while the generated result returns a single variable (boundary) containing a POLYGON geometry. The geometry string in the generated result matches exactly the wkt1 value from the gold result, providing the same boundary information for the catchment monitored by sensor 3003. The difference in variable naming does not affect the semantic equivalence of the answer."
+Which catchments share a boundary with the catchment that recorded the highest total precipitation between 2012 and 2015?,"PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?catchment ?identifier ?name
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?targetCatchment (SUM(xsd:decimal(?precip)) AS ?totalPrecip)
+      WHERE {
+        ?obs rdf:type sosa:Observation ;
+             sosa:observedProperty hydrorwth:hasMeanDailyPrecip ;
+             sosa:resultTime ?time ;
+             sosa:hasFeatureOfInterest ?targetCatchment ;
+             sosa:hasResult/(qudt:numericValue|qudt:quantityValue/qudt:numericValue) ?precip .
+        FILTER(STR(?time) >= ""2012-01-01"" && STR(?time) < ""2016-01-01"")
+      }
+      GROUP BY ?targetCatchment
+      ORDER BY DESC(?totalPrecip)
+      LIMIT 1
+    }
+    ?targetCatchment geo:hasGeometry/geo:asWKT ?targetWKT .
+    ?catchment geo:hasGeometry/geo:asWKT ?wkt .
+    FILTER(?catchment != ?targetCatchment)
+    FILTER(<http://www.opengis.net/def/function/geosparql/sfTouches>(?wkt, ?targetWKT))
+    OPTIONAL { ?catchment dct:identifier ?identifier . }
+    OPTIONAL { ?catchment schema:name ?name . }
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?topCatchment ?topTotalPrecip ?neighborCatchment
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?topCatchment (SUM(xsd:decimal(?precVal)) AS ?topTotalPrecip)
+      WHERE {
+        ?sensor a sosa:Sensor ;
+                hyobs:monitorsCatchment ?topCatchment .
+
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:madeBySensor ?sensor ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?precVal .
+
+        FILTER(?t >= ""2012-01-01""^^xsd:date &&
+              ?t <  ""2016-01-01""^^xsd:date)
+      }
+      GROUP BY ?topCatchment
+      ORDER BY DESC(?topTotalPrecip)
+      LIMIT 1
+    }
+
+    ?topCatchment geo:hasGeometry ?g1 .
+    ?g1 geo:asWKT ?wkt1 .
+
+    ?neighborCatchment a envthes:30212.
+    ?neighborCatchment geo:hasGeometry ?g2 .
+    ?g2 geo:asWKT ?neighborWkt .
+
+    FILTER(?neighborCatchment != ?topCatchment)
+    FILTER(bif:st_intersects(?wkt1, ?neighborWkt, 0))
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,3,2026-08-04T04:36:56.480893,78.13091111183167,True,0.09876543209876543,0.4505494505494505,0.981978735041262,0.8039630055427551,0.892970860004425,0.8790490729915326,0.8660254037844387,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold bindings contain two result rows with the variables topCatchment, topTotalPrecip, and neighborCatchment, providing specific URIs and a precipitation value. The generated bindings have a completely different set of variables (catchment, identifier, name) and contain no rows at all. Because the variable names, the number of rows, and the actual data differ, the two result sets are not equivalent."
+What is the area of the largest catchment in the dataset?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+SELECT ?area
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment hyobs:hasCatchmentArea ?areaValue .
+    ?areaValue qudt:numericValue ?area .
+  }
+}
+ORDER BY DESC(?area)
+LIMIT 1","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?area
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment a envthes:30212.
+    ?catchment hyobs:hasCatchmentArea ?areaNode .
+    ?areaNode qudt:numericValue ?area .
+  }
+}
+ORDER BY DESC(xsd:decimal(?area))
+LIMIT 1",gpt-5.5,c01,small,Only_ClassesProperties,4,2026-08-04T04:38:29.290006,8.20350170135498,True,0.5555555555555555,0.7640449438202247,0.979070927796758,0.9028088450431824,0.9409399032592773,1.0,1.0,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,shared_variables:area,No,"The gold result includes two variables – ""catchment"" and ""area"" – and provides a binding for both, while the generated result only projects the ""area"" variable and omits the ""catchment"" binding. Because the sets of projected variables differ, the two result sets are not equivalent, even though the numeric area value matches."
+What are the areas of all catchments in the dataset?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX schema: <http://schema.org/>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?catchment ?identifier ?name ?area ?areaValue ?unit
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment hyobs:hasCatchmentArea ?area .
+    OPTIONAL { ?catchment dct:identifier ?identifier . }
+    OPTIONAL { ?catchment schema:name ?name . }
+    OPTIONAL { ?area qudt:numericValue ?areaValue . }
+    OPTIONAL { ?area qudt:unit ?unit . }
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?area
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment a envthes:30212.
+    ?catchment hyobs:hasCatchmentArea ?areaNode .
+    ?areaNode qudt:numericValue ?area .
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,5,2026-08-04T04:38:40.376171,8.748127222061157,True,0.1,0.39925373134328357,0.9339425545811394,0.8573753237724304,0.8956589698791504,0.3333333333333333,0.8164965809277259,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:catchment,area",Yes,"Both results provide the same set of catchments and their corresponding area values. While the generated result includes additional metadata (such as 'areaValue', 'unit', and a bnode for 'area'), the core information requested—the areas of all catchments—is identical in both bindings."
+What is the distance between the gauging stations with the highest and lowest elevations in the dataset?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX wgs84_pos: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+SELECT ?highStation ?highElevation ?lowStation ?lowElevation ?distanceMeters
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?highStation ?highElevation ?highWKT
+      WHERE {
+        ?highStation rdf:type sosa:Sensor ;
+          wgs84_pos:alt ?highElevation ;
+          geo:hasGeometry ?highGeometry .
+        ?highGeometry geo:asWKT ?highWKT .
+      }
+      ORDER BY DESC(xsd:decimal(?highElevation))
+      LIMIT 1
+    }
+    {
+      SELECT ?lowStation ?lowElevation ?lowWKT
+      WHERE {
+        ?lowStation rdf:type sosa:Sensor ;
+          wgs84_pos:alt ?lowElevation ;
+          geo:hasGeometry ?lowGeometry .
+        ?lowGeometry geo:asWKT ?lowWKT .
+      }
+      ORDER BY xsd:decimal(?lowElevation)
+      LIMIT 1
+    }
+    BIND(geof:distance(?highWKT, ?lowWKT, unit:M) AS ?distanceMeters)
+  }
+}","PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX wgs84_pos: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?highestSensor ?highestEle ?lowestSensor ?lowestEle ?distance
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?highestSensor ?highestEle ?wktHigh
+      WHERE {
+        ?highestSensor a sosa:Sensor ;
+                      geo:hasGeometry ?gHigh .
+        ?gHigh wgs84_pos:alt ?highestEle ;
+              geo:asWKT ?wktHigh .
+      }
+      ORDER BY DESC(xsd:decimal(?highestEle))
+      LIMIT 1
+    }
+
+    {
+      SELECT ?lowestSensor ?lowestEle ?wktLow
+      WHERE {
+        ?lowestSensor a sosa:Sensor ;
+                      geo:hasGeometry ?gLow .
+        ?gLow wgs84_pos:alt ?lowestEle ;
+              geo:asWKT ?wktLow .
+      }
+      ORDER BY xsd:decimal(?lowestEle)
+      LIMIT 1
+    }
+
+    BIND(bif:st_distance(?wktHigh, ?wktLow) AS ?distance)
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,6,2026-08-04T04:44:42.920166,18.941032648086548,True,0.6,0.7687366167023555,1.0,0.6987505555152893,0.8493752479553223,0.9999999999999998,0.9999999999999998,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold result contains a binding with specific values for the highest and lowest sensors, their elevations, and the distance between them. The generated result provides an empty bindings list (no results) and even uses different variable names. Because the generated output lacks the required binding and values, it does not match the gold result."
+What are the gauging stations within a 50 km radius of the Gauging Station nr. 1001?,"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX schema: <http://schema.org/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+
+SELECT ?station ?stationName ?stationIdentifier
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?referenceStation rdf:type sosa:Sensor ;
+      dct:identifier ""1001"" ;
+      geo:hasGeometry ?referenceGeometry .
+    ?referenceGeometry geo:asWKT ?referenceWKT .
+
+    ?station rdf:type sosa:Sensor ;
+      dct:identifier ?stationIdentifier ;
+      geo:hasGeometry ?stationGeometry .
+    ?stationGeometry geo:asWKT ?stationWKT .
+
+    OPTIONAL { ?station schema:name ?stationName . }
+
+    FILTER(?station != ?referenceStation)
+    FILTER(geof:distance(?referenceWKT, ?stationWKT, unit:KiloM) <= 50)
+  }
+}","PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX dct:  <http://purl.org/dc/terms/>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?neighborSensor ?neighborName ?distance
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?refSensor a sosa:Sensor ;
+              dct:identifier ?refId ;
+              geo:hasGeometry ?refGeom .
+    FILTER(str(?refId) = ""1001"")
+
+    ?refGeom geo:asWKT ?refWkt .
+
+    ?neighborSensor a sosa:Sensor ;
+                    geo:hasGeometry ?neighborGeom .
+    ?neighborGeom geo:asWKT ?neighborWkt .
+
+    OPTIONAL { ?neighborSensor schema:name ?neighborName }
+
+    FILTER(?neighborSensor != ?refSensor)
+
+    BIND(bif:st_distance(?refWkt, ?neighborWkt) AS ?distance)
+    FILTER(?distance <= 50)
+  }
+}
+ORDER BY ?distance",gpt-5.5,c01,small,Only_ClassesProperties,7,2026-08-04T04:45:04.222337,10.658302068710327,True,0.2962962962962963,0.6842105263157895,0.998940809450164,0.7471417188644409,0.8730412721633911,0.9091372900969896,0.8164965809277261,True,,True,,error,actual_query_failed: HTTP_ERROR: 500 Server Error: SPARQL Request Failed for url: https://obs.knowledgehub.nfdi4earth.de/sparql/,,,,,,,,,,,,,
+What is the name of the station with the ID 12005?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?name
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?station a sosa:Sensor ;
+             dct:identifier ?id ;
+             schema:name ?name .
+    FILTER(STR(?id) = ""12005"")
+  }
+}","PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX dct:  <http://purl.org/dc/terms/>
+
+SELECT ?stationName ?stationId
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor a sosa:Sensor ;
+           dct:identifier ?stationId;
+		   schema:name ?stationName.
+    FILTER(str(?stationId) = ""12005"")
+
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,8,2026-08-04T04:45:15.993192,3.8246564865112305,True,0.41666666666666663,0.917910447761194,0.9883324222148014,0.9590218663215637,0.9736771583557129,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.5,1.0,0.5,0.6666666666666666,all_values,No,"The generated bindings do not match the gold bindings because they contain a different set of variables. The gold result includes both `stationName` and `stationId` with the correct ID value ""12005"", while the generated result only provides a `name` variable and omits the `stationId` binding entirely. Therefore, the two result sets are not equivalent."
+Which catchment recorded the highest mean precipitation in 2015?,"PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX schema: <http://schema.org/>
+
+SELECT ?catchment ?catchmentName (AVG(?precipValue) AS ?meanPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?obs sosa:observedProperty hydrorwth:hasMeanDailyPrecip ;
+         sosa:hasFeatureOfInterest ?catchment ;
+         sosa:resultTime ?time ;
+         sosa:hasResult ?result .
+    OPTIONAL { ?catchment schema:name ?catchmentName . }
+    {
+      ?result qudt:numericValue ?precipValue .
+    }
+    UNION
+    {
+      ?result qudt:quantityValue ?quantityValue .
+      ?quantityValue qudt:numericValue ?precipValue .
+    }
+    FILTER(STRSTARTS(STR(?time), ""2015""))
+  }
+}
+GROUP BY ?catchment ?catchmentName
+ORDER BY DESC(?meanPrecipitation)
+LIMIT 1","PREFIX sosa:   <http://www.w3.org/ns/sosa/>
+PREFIX envthes:<http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:   <http://qudt.org/schema/qudt/>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?catchment ?meanPrecip
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?catchment (AVG(xsd:decimal(?val)) AS ?meanPrecip)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+        ?res qudt:numericValue ?val .
+
+        FILTER(?t >= ""2015-01-01""^^xsd:date &&
+              ?t <  ""2016-01-01""^^xsd:date)
+      }
+      GROUP BY ?catchment
+      ORDER BY DESC(?meanPrecip)
+      LIMIT 1
+    }
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,9,2026-08-04T04:45:22.242998,16.996633052825928,True,0.05555555555555555,0.45372460496614,0.9754192155293674,0.8041520714759827,0.889785647392273,0.8249579113843053,0.8660254037844387,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:catchment,No,"The gold bindings contain a single result with a catchment URI and a mean precipitation value, while the generated bindings are empty and use different variable names. The absence of the expected result and the mismatch in variables mean the two bindings are not equivalent."
+Which catchments recorded annual precipitation > 1000 mm in Great Britain in 2000?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?catchment ?name (SUM(xsd:decimal(?precipitation)) AS ?annualPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?observation a sosa:Observation ;
+      sosa:observedProperty envthes:30212 ;
+      sosa:hasFeatureOfInterest ?catchment ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result <https://qudt.org/schema/qudt/numericValue> ?precipitation .
+    OPTIONAL { ?catchment schema:name ?name . }
+    FILTER(STRSTARTS(STR(?time), ""2000""))
+  }
+}
+GROUP BY ?catchment ?name
+HAVING (SUM(xsd:decimal(?precipitation)) > 1000)","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?catchment ?annualPrecip
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?catchment (SUM(xsd:decimal(?val)) AS ?annualPrecip)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        FILTER(?t >= ""2000-01-01""^^xsd:date &&
+              ?t <  ""2001-01-01""^^xsd:date)
+      }
+      GROUP BY ?catchment
+    }
+
+    FILTER(?annualPrecip > 1000)
+  }
+}
+ORDER BY DESC(?annualPrecip)",gpt-5.5,c01,small,Only_ClassesProperties,10,2026-08-04T04:45:42.417652,41.06776189804077,True,0.1111111111111111,0.5785340314136126,0.9560868625499337,0.8813027739524841,0.9186948537826538,0.7385489458759965,0.7302967433402214,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:catchment,No,"The gold result contains numerous catchments with annual precipitation values exceeding 1000 mm, whereas the generated result is empty. Since the generated bindings do not include any of the expected catchments, the two result sets are not equivalent."
+What are the mean slope and mean elevation of catchments with an area greater than 50km?,"PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+SELECT ?catchment ?meanSlope ?meanElevation
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment hyobs:hasCatchmentArea ?areaValue ;
+               hyobs:meanSlope ?slopeValue ;
+               hyobs:meanElevation ?elevationValue .
+    ?areaValue qudt:numericValue ?area .
+    ?slopeValue qudt:numericValue ?meanSlope .
+    ?elevationValue qudt:numericValue ?meanElevation .
+    FILTER(?area > 50)
+  }
+}","PREFIX hyobs: <https://w3id.org/hmontology/>
+PREFIX qudt:  <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT ?catchment ?meanSlope ?elevation ?area
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment a envthes:30212;
+        hyobs:meanSlope ?meanSlope;
+  hyobs:meanElevation ?elevationbNode;
+          hyobs:hasCatchmentArea ?areaNode .
+      
+      ?areaNode qudt:numericValue ?area .
+      ?elevationbNode qudt:numericValue ?elevation .
+      
+      FILTER (xsd:decimal(?area) > 50)
+    }
+}",gpt-5.5,c01,small,Only_ClassesProperties,11,2026-08-04T04:46:27.283555,9.404985904693604,True,0.19999999999999998,0.7315175097276265,0.9921748659570819,0.8951089382171631,0.9436419010162354,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,"shared_variables:catchment,meanSlope",No,"The gold result contains numerous bindings with catchment, meanSlope, elevation, and area values for catchments where area > 50km². The generated result, however, has an empty bindings list and does not provide any of the required data, making the two results not equivalent."
+What are the minimum and maximum precipitation observed at the Gauging Station 'wick at tarroul'?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+
+SELECT (MIN(?precipValue) AS ?minimumPrecipitation) (MAX(?precipValue) AS ?maximumPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?station a sosa:Sensor ;
+      schema:name ?stationName .
+    FILTER(LCASE(STR(?stationName)) = ""wick at tarroul"")
+    ?observation a sosa:Observation ;
+      sosa:madeBySensor ?station ;
+      sosa:observedProperty envthes:30212 ;
+      sosa:hasResult ?result .
+    ?result qudt:numericValue ?precipValue .
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX schema:  <http://schema.org/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (MIN(xsd:decimal(?val)) AS ?minFlow) (MAX(xsd:decimal(?val)) AS ?maxFlow)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> 
+  {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:madeBySensor ?sensor ;
+            sosa:hasResult ?res .
+        ?res qudt:numericValue ?val .
+        ?sensor a sosa:Sensor ;
+            schema:name ?stationName .
+        FILTER(lcase(str(?stationName)) = ""wick at tarroul"")
+      }
+    }",gpt-5.5,c01,small,Only_ClassesProperties,12,2026-08-04T04:46:40.326878,14.70380687713623,True,0.24999999999999997,0.4012345679012346,0.9949366763261821,0.8638847470283508,0.9294106960296631,1.0000000000000002,1.0000000000000002,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold bindings contain concrete numeric values for the minimum and maximum flow (0 and 57) under the variables 'minFlow' and 'maxFlow'. The generated bindings have different variable names ('minimumPrecipitation' and 'maximumPrecipitation') and provide an empty binding with no values. Therefore, the two result sets do not convey the same information and are not equivalent."
+What are the minimum and maximum precipitation across all gauging stations?,"PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+SELECT (MIN(?precipValue) AS ?minimumPrecipitation) (MAX(?precipValue) AS ?maximumPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?station hydrorwth:monitorsCatchment ?catchment .
+    ?catchment hydrorwth:hasMeanDailyPrecip ?precipitation .
+    ?precipitation qudt:numericValue ?precipValue .
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?minPrecipitation ?maxPrecipitation
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT
+        (MIN(xsd:decimal(?val)) AS ?minPrecipitation)
+        (MAX(xsd:decimal(?val)) AS ?maxPrecipitation)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:hasResult ?res .
+        ?res qudt:numericValue ?val .
+      }
+    }
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,13,2026-08-04T04:47:11.033113,9.838632345199585,True,0.4444444444444444,0.41960784313725485,0.9786903278538914,0.7036941647529602,0.8411922454833984,0.9486832980505138,0.9999999999999998,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold bindings contain two variables (minPrecipitation and maxPrecipitation) each bound to specific decimal values (0 and 166.29). The generated bindings use different variable names (minimumPrecipitation and maximumPrecipitation) and provide an empty binding with no values. Because the variable names differ and the generated result lacks the required values, the two result sets are not equivalent."
+What is the average annual precipitation in Catchment 1001 during the period from 2002 to 2005?,"PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ((SUM(?value) / 4) AS ?averageAnnualPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?catchment dct:identifier ?catchmentId .
+    FILTER(STR(?catchmentId) = ""1001"")
+    ?obs a sosa:Observation ;
+      sosa:hasFeatureOfInterest ?catchment ;
+      sosa:observedProperty hydrorwth:hasMeanDailyPrecip ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result qudt:numericValue ?value .
+    FILTER(STR(?time) >= ""2002-01-01"" && STR(?time) < ""2006-01-01"")
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+PREFIX hyobs:   <https://w3id.org/hmontology/>
+
+SELECT ?catchment (AVG(?annualTotal) AS ?avgAnnualPrecip)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?catchment ?year (SUM(xsd:decimal(?val)) AS ?annualTotal)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106 ;
+            sosa:hasFeatureOfInterest ?catchment ;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        FILTER(?catchment = hyobs:catchment_1001)
+        BIND(YEAR(?t) AS ?year)
+        FILTER(?year >= 2002 && ?year <= 2005)
+      }
+      GROUP BY ?catchment ?year
+    }
+  }
+}
+GROUP BY ?catchment",gpt-5.5,c01,small,Only_ClassesProperties,14,2026-08-04T04:47:38.859883,37.576521158218384,True,0.20833333333333331,0.4674157303370786,0.9874575756801485,0.8572644591331482,0.9223610162734985,0.7637626158259734,0.7745966692414834,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,all_values,No,"The gold bindings contain a concrete result: the catchment URI (https://w3id.org/hmontology/catchment_1001) and a decimal value for avgAnnualPrecip (1006.545). The generated bindings, however, list a different variable name (averageAnnualPrecipitation) and provide an empty binding with no values. Therefore the generated result does not convey the same information as the gold result."
+Which month experienced the highest mean monthly precipitation rate in Great Britain in 2002?,"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?month (AVG(?value) AS ?meanMonthlyPrecipitationRate)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?observation a sosa:Observation ;
+      sosa:observedProperty envthes:30212 ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result qudt:quantityValue ?quantityValue .
+    ?quantityValue qudt:numericValue ?value .
+    FILTER(YEAR(xsd:dateTime(?time)) = 2002)
+    BIND(MONTH(xsd:dateTime(?time)) AS ?month)
+  }
+}
+GROUP BY ?month
+ORDER BY DESC(?meanMonthlyPrecipitationRate)
+LIMIT 1","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?month ?meanMonthlyFlow
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      SELECT ?month (AVG(xsd:decimal(?val)) AS ?meanMonthlyFlow)
+      WHERE {
+        ?obs a sosa:Observation ;
+            sosa:observedProperty envthes:30106;
+            sosa:resultTime ?t ;
+            sosa:hasResult ?res .
+
+        ?res qudt:numericValue ?val .
+
+        BIND(YEAR(?t) AS ?year)
+        FILTER(?year = 2002)
+
+        BIND(MONTH(?t) AS ?month)
+      }
+      GROUP BY ?month
+      ORDER BY DESC(?meanMonthlyFlow)
+      LIMIT 1
+    }
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,15,2026-08-04T04:48:19.026342,9.233963966369629,True,0.16666666666666666,0.6151761517615176,0.9896665385552957,0.9024465680122375,0.9460565447807312,0.9434563530497265,0.9999999999999999,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:month,No,"The gold result contains a binding with month=2 and a mean monthly value, whereas the generated result has an empty bindings array (no rows). Since the generated output lacks the data present in the gold output, the two result sets are not equivalent."
+Which years experienced average annual precipitation below 1200 mm/year in Great Britain?,"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX hydrorwth: <https://hydro-knowledge-graph-f48785.pages.rwth-aachen.de/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?year (AVG(xsd:decimal(?value)) AS ?averageAnnualPrecipitation)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?observation rdf:type sosa:Observation ;
+      sosa:observedProperty hydrorwth:hasMeanDailyPrecip ;
+      sosa:resultTime ?time ;
+      sosa:hasResult ?result .
+    ?result qudt:quantityValue ?quantityValue .
+    ?quantityValue qudt:numericValue ?value .
+    BIND(YEAR(xsd:dateTime(?time)) AS ?year)
+  }
+}
+GROUP BY ?year
+HAVING (AVG(xsd:decimal(?value)) < 1200)
+ORDER BY ?year","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?year ?avgAnnualPrecip
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    {
+      # for a given year, take the average over all catchments 
+      SELECT ?year (AVG(?annualTotal) AS ?avgAnnualPrecip)
+      WHERE {
+        {
+         # take annual total per catchment
+          SELECT ?year ?catchment (SUM(xsd:decimal(?val)) AS ?annualTotal)
+          WHERE {
+            ?obs a sosa:Observation ;
+                sosa:observedProperty envthes:30106 ;
+                sosa:hasFeatureOfInterest ?catchment ;
+                sosa:resultTime ?t ;
+                sosa:hasResult ?res .
+
+            ?res qudt:numericValue ?val .
+            BIND(YEAR(?t) AS ?year)
+          }
+          GROUP BY ?year ?catchment
+        }
+      }
+      GROUP BY ?year
+    }
+
+    FILTER(?avgAnnualPrecip < 1200)
+  }
+}
+ORDER BY ?year",gpt-5.5,c01,small,Only_ClassesProperties,16,2026-08-04T04:48:48.072231,11.670226812362671,True,0.25,0.4064272211720227,0.9896665385552957,0.848900556564331,0.9192835092544556,0.7921180343813395,0.8333333333333335,True,,True,,standard,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,shared_variables:year,No,"The gold bindings contain a non‑empty list of years with their average precipitation values (all below the 1200 mm/year threshold). The generated bindings return an empty list, lacking any of the expected year‑precipitation pairs. Therefore the two result sets are not equivalent."
+How many frost days were recorded at the “brora at bruachrobie” station between 2000 and 2010? (Frost days are defined as days with temperatures below 0°C),"PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX schema: <http://schema.org/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (COUNT(DISTINCT ?time) AS ?frostDays)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?obs a sosa:Observation ;
+         sosa:madeBySensor ?station ;
+         sosa:resultTime ?time ;
+         sosa:hasResult ?result .
+    ?station schema:name ?stationName .
+    ?result qudt:numericValue ?temperature .
+    FILTER(LCASE(STR(?stationName)) = ""brora at bruachrobie"")
+    FILTER(xsd:dateTime(?time) >= ""2000-01-01T00:00:00""^^xsd:dateTime && xsd:dateTime(?time) < ""2011-01-01T00:00:00""^^xsd:dateTime)
+    FILTER(xsd:decimal(?temperature) < 0)
+  }
+}","PREFIX sosa:    <http://www.w3.org/ns/sosa/>
+PREFIX schema:  <http://schema.org/>
+PREFIX envthes: <http://vocabs.lter-europe.net/EnvThes/>
+PREFIX qudt:    <http://qudt.org/schema/qudt/>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+
+SELECT (COUNT(DISTINCT ?day) AS ?frostDays)
+WHERE {
+  GRAPH <hydroturtle/camels_gb> {
+    ?sensor a sosa:Sensor ;
+            schema:name ?stationName .
+    FILTER(lcase(str(?stationName)) = ""brora at bruachrobie"")
+
+    ?obs a sosa:Observation ;
+        sosa:observedProperty envthes:21524 ;
+        sosa:madeBySensor ?sensor ;
+        sosa:resultTime ?t ;
+        sosa:hasResult ?res .
+
+    ?res qudt:numericValue ?tempVal .
+
+    FILTER(xsd:decimal(?tempVal) < 0)
+    FILTER(?t >= ""2000-01-01""^^xsd:date &&
+          ?t <  ""2010-01-01""^^xsd:date)
+
+    BIND(xsd:date(?t) AS ?day)
+  }
+}",gpt-5.5,c01,small,Only_ClassesProperties,17,2026-08-04T04:49:22.844452,11.156063556671143,True,0.25,0.47494033412887826,1.0,0.9257407188415527,0.9628703594207764,0.960768922830523,0.8944271909999159,True,,True,,count,,0.0,,,,,,,,,,,No,"The gold binding reports 195 frost days, while the generated binding reports 250 frost days. Since the numeric values differ, the two result sets are not equivalent."

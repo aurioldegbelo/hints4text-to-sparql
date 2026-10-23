@@ -18,6 +18,10 @@ The following conditions were compared for four models () across the three datas
 
 Schema refers to the extent to which the knowledge graph schema (i.e. its classes and relationships) is exposed to the LLM during the SPARQL generation process. The available schema modes are `full`, `small`, `ner`, `reasoning_path`, and `none`.
 
+# Questions 
+
+to be added
+
 # Results
 
 ## Execution time

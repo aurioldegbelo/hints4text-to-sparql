@@ -2,6 +2,8 @@ Experiments about the impact of different types of hints on LLM-based SPARQL que
 
 The following conditions were compared for four models () across the three datasets (LamaH-CE, CAMELS-GB, and QUADICA).
 
+# Conditions
+
 |Preset|Schema mode|Contents|
 |-|-|-|
 |`base`|`small`|Default small schema and general constraints.|
@@ -15,3 +17,26 @@ The following conditions were compared for four models () across the three datas
 |`ca_cb_ia_ic`|`reasoning_path`|The previous combination plus query, aggregation, function, and unit hints.|
 
 Schema refers to the extent to which the knowledge graph schema (i.e. its classes and relationships) is exposed to the LLM during the SPARQL generation process. The available schema modes are `full`, `small`, `ner`, `reasoning_path`, and `none`.
+
+# Results
+
+## Execution time
+
+<img width="3562" height="1763" alt="plot_ET_LamaH_CE" src="https://github.com/user-attachments/assets/c03bf723-0581-4f57-8a5d-e55cab9b947f" />
+<img width="3562" height="1763" alt="plot_ET_CAMELS_GB" src="https://github.com/user-attachments/assets/51e1d3d1-ee74-4a37-a794-c56b563f0852" />
+<img width="3563" height="1763" alt="plot_ET_QUADICA" src="https://github.com/user-attachments/assets/3350df14-f382-4c2d-901f-36d8370612f1" />
+
+## Syntactic validity
+
+
+<img width="3560" height="1763" alt="plot_VS_LamaH_CE" src="https://github.com/user-attachments/assets/10259683-d426-4fe5-a3f9-c6b002778a6e" />
+<img width="3560" height="1763" alt="plot_VS_CAMELS_GB" src="https://github.com/user-attachments/assets/be234bca-fccb-4f4c-8ffa-f5d28e85859c" />
+<img width="3560" height="1763" alt="plot_VS_QUADICA" src="https://github.com/user-attachments/assets/6f3d516b-72d1-448d-9628-d00b385402a3" />
+
+## Query correctness
+
+
+<img width="3560" height="1763" alt="plot_AAF_LamaH_CE" src="https://github.com/user-attachments/assets/9a496692-47dc-401f-9f25-c05890d203e3" />
+<img width="3560" height="1763" alt="plot_AAF_CAMELS_GB" src="https://github.com/user-attachments/assets/bd1468cd-373b-4ab2-bdeb-d1449ae3a170" />
+<img width="3560" height="1763" alt="plot_AAF_QUADICA" src="https://github.com/user-attachments/assets/6cf8d6c8-23af-4439-9b28-ef38aeb70b78" />
+

@@ -2,7 +2,7 @@ Experiments on the impact of different types of hints on LLM-based SPARQL query 
 
 The following conditions were compared across four models (GPT-4.1, GPT-5.4-mini, GPT-5.4-nano, and GPT-5.5) and three datasets (LamaH-CE, CAMELS-GB, and QUADICA).
 
-# Conditions
+# 🧪 Conditions
 
 |Preset|Schema mode|Contents|
 |-|-|-|
@@ -18,11 +18,11 @@ The following conditions were compared across four models (GPT-4.1, GPT-5.4-mini
 
 Schema refers to the extent to which the knowledge graph schema (i.e. its classes and relationships) is exposed to the LLM during the SPARQL generation process. The available schema modes are `full`, `small`, `ner`, `reasoning_path`, and `none`.
 
-# Questions 
+# ❓ Questions 
 
 to be added
 
-# Results
+# 📊 Results
 
 ## Execution time
 

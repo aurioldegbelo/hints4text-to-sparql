@@ -22,6 +22,15 @@ Schema refers to the extent to which the knowledge graph schema (i.e. its classe
 
 to be added
 
+
+# 🗂️ Datasets
+
+- LamaH-CE in RDF: https://doi.org/10.5281/zenodo.16948620 
+
+- CAMELS-GB in RDF: https://doi.org/10.5281/zenodo.16950260 
+
+- QUADICA in RDF: https://doi.org/10.5281/zenodo.17290249
+
 # 📊 Results
 
 ## Execution time

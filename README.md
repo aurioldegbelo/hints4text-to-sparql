@@ -1,4 +1,4 @@
-Experiments on the impact of different types of hints on LLM-based SPARQL query generation on long-tail scientific graphs. The detailed results per experiment are available in the [\experiment folder](/experiments). The structured questions can be accessed in the [\questions folder](/questions).
+Experiments on the impact of different types of hints on LLM-based SPARQL query generation on long-tail scientific graphs. The detailed results per experiment are available in the [\experiment folder](/experiments). 
 
 The following conditions were compared across four models (GPT-4.1, GPT-5.4-mini, GPT-5.4-nano, and GPT-5.5) and three datasets (LamaH-CE, CAMELS-GB, and QUADICA).
 
@@ -20,7 +20,8 @@ Schema refers to the extent to which the knowledge graph schema (i.e. its classe
 
 # ❓ Questions 
 
-to be added
+The structured questions can be accessed in the [\questions folder](/questions).
+
 
 
 # 🗂️ Datasets

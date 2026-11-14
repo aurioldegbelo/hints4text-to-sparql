@@ -681,6 +681,7 @@
             # - Temperature observations use observedProperty hyobs:AirTemperature2mAvg
             # - We count DISTINCT calendar days (not individual observations)
             # - Time window: 2010-01-01 (inclusive) to 2021-01-01 (exclusive)
+            # Note: this question was excluded from the Text-to-SPARQL analysis because of time-out errors
 
             # Find the sensor for the "Bangs" gauging station
             ?sensor a sosa:Sensor ;
@@ -699,9 +700,9 @@
             # Keep only frost days (temperature below 0°C)
             FILTER(xsd:decimal(?tempVal) < 0)
 
-            # Restrict to the date range 2010–2020 (inclusive years)
+            # Restrict to the date range 2010–2019 (inclusive years)
             FILTER(?t >= "2010-01-01T00:00:00Z"^^xsd:dateTime &&
-                  ?t <  "2021-01-01T00:00:00Z"^^xsd:dateTime)
+                  ?t <  "2020-01-01T00:00:00Z"^^xsd:dateTime)
 
             # Extract the calendar day and count unique days
             BIND(xsd:date(?t) AS ?day)
